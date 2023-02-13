@@ -1,0 +1,74 @@
+﻿@using System.Security.Claims;
+
+<div id="map" style="width:100%; height:500px"></div>
+@section Scripts{
+    <script>    
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+      } else {
+        map.innerHTML = "Geolocation is not supported by this browser.";
+      }
+    }
+
+var markerDriver = new mapboxgl.Marker({color:'#F00'});
+var center = null;
+mapboxgl.accessToken = 'pk.eyJ1IjoiMjA4ODAyNzgiLCJhIjoiY2w4bzBvZWQ1MGlpcDNvcGJwMWcya3RzdiJ9.3lsgrTQgHB13Jb-00-d5WQ';
+var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',            
+            zoom: 15
+        });
+
+var memberId = '@User.FindFirstValue(ClaimTypes.NameIdentifier)';
+var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+var wsUri = protocol + "//" + window.location.host;
+var socket = new WebSocket(wsUri);
+        socket.onopen = e => {
+            console.log("socket opened", e);
+        };
+        socket.onclose = function (e) {
+            console.log("socket closed", e);
+        };
+        socket.onmessage = function (e) {
+            var o = JSON.parse(e.data);
+            if(o['r']=='cus'){
+                console.log('Customer',o);
+                markers[o['mId']].setLngLat([o['long'], o['lat']]).addTo(map);
+            }            
+        };
+        socket.onerror = function (e) {
+            console.error(e.data);
+        };
+
+    function showPosition(pos) {
+        center = [pos.coords.longitude, pos.coords.latitude];
+        var o = {memberId: '@User.FindFirstValue(ClaimTypes.NameIdentifier)',
+            longitude: center[0],
+            latitude: center[1] };
+        $.post('/home/setlocation', o, (d) => {
+            console.log(d);
+        });
+        map.setCenter(center);
+        markerDriver.setLngLat(center).addTo(map);  
+    }
+    getLocation();
+    //danh sach, khi cap nhat phai biet marker la cua ai
+var markers = {};
+$.post('/home/getcustomers', { id: memberId }, (arr) => {
+    for(var i in arr){
+        var o=arr[i];
+        console.log(o);
+        if (o['longitude'] != null && o['latitude'] != null){
+            markers[o['memberId']] = new mapboxgl.Marker().setLngLat([o['longitude'], o['latitude']]).addTo(map);
+        }
+    }
+});
+    window.setInterval(function() {
+        center[0] += 0.001;
+        socket.send(JSON.stringify({r:'dri',mId:memberId, long:center[0],lat:center[1]}));
+        markerDriver.setLngLat(center).addTo(map);
+    },1000)
+</script> 
+}
+

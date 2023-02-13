@@ -1,0 +1,18 @@
+﻿@model LoginModel
+<form method="post">
+    <div>
+        <label>Username</label>
+        <input type="text" asp-for="Usr" />
+    </div>
+        <div>
+        <label>Password</label>
+        <input type="text" asp-for="Pwd" />
+    </div>
+        <div>
+        <label>Remember Me!</label>
+        <input type="checkbox" asp-for="Rem" />
+    </div>
+    <div>
+        <button>Login</button>
+</div>
+</form>

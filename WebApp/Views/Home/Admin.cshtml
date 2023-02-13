@@ -1,0 +1,93 @@
+﻿@model List<Member>
+<p>Welcome: @User.Identity.Name</p>
+<table class="table table-border">
+    <thead>
+            <tr><th colspan="2">Username</th><th>Email</th><th>Distance</th></tr>
+    </thead>
+
+    @foreach (var item in Model)
+    {
+        <thead>
+            <tr class="p" id="@item.Id" long="@item.Longitude" lat="@item.Latitude">
+                <td colspan="2">@item.Username</td>
+                <td>@item.Email</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var child in item.Customers)
+            {
+                <tr class="c" id="@child.Id" long="@child.Longitude" lat="@child.Latitude">
+                    <td></td>
+                    <td>@child.Username</td>
+                    <td>@child.Email</td>
+                    <td class="d">Distance ?</td>
+                    <td class="t"></td>
+                </tr>
+            }
+        </tbody>
+    }
+</table>
+@section Scripts{
+<script>
+
+function euclidean(p1, p2) {
+    var s = 0;
+    for(var i in p1){
+        s += Math.pow(p1[i] - p2[i], 2);
+    }
+    return Math.sqrt(s);
+}
+
+function distance(node){    
+    var addrSrc = [$(node).attr('long'), $(node).attr('lat')];
+    console.log(addrSrc);
+    var cs = $(node).closest('thead').next('tbody').find('tr.c');
+    for (var j = 0; j < cs.length; j++) {
+        $(cs[j]).find('td.d').text(function() {
+            var addrDes = [$(cs[j]).attr('long'), $(cs[j]).attr('lat')];
+            //$.post('/home/distance', {addrSrc:addrSrc.join(','), addrDes:addrDes.join()}, (d)=>{
+            //    var o = JSON.parse(d);
+            //    $(this).text(o['routes'][0]['distance']);
+            //    $(this).next('td.t').text(euclidean(addrSrc, addrDes)*10000);
+            //});
+            $.get(`https://api.mapbox.com/directions/v5/mapbox/driving/${addrSrc.join(',')};${addrDes.join(',')}.json?access_token=pk.eyJ1IjoiMjA4ODAyNzgiLCJhIjoiY2w4bzBvZWQ1MGlpcDNvcGJwMWcya3RzdiJ9.3lsgrTQgHB13Jb-00-d5WQ`, (o) => {
+                $(this).text(o['routes'][0]['distance']);
+                $(this).next('td.t').text(euclidean(addrSrc, addrDes)*10000);
+            });
+        });
+    }
+}
+    var ps = $('thead tr.p');
+    for (var i = 0; i < ps.length; i++) {
+    distance(ps[i]);
+}
+
+        var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        var wsUri = protocol + "//" + window.location.host;
+        var socket = new WebSocket(wsUri);
+        socket.onopen = e => {
+            console.log("socket opened", e);
+        };
+        socket.onclose = function (e) {
+            console.log("socket closed", e);
+        };
+        socket.onmessage = function (e) {
+            var o = JSON.parse(e.data);
+            var tr = $(`tr[id=${o['mId']}]`);
+            tr.attr('long',o['long']);
+            tr.attr('lat',o['lat']);
+
+            if(o['r']=='dri'){
+                distance(tr);
+            }
+            //$(`td[long=${o['mId']}]`).text(o['long']);
+            //$(`td[lat=${o['mId']}]`).text(o['lat']);
+        };
+        socket.onerror = function (e) {
+            console.error(e.data);
+        };
+</script>
+}
+

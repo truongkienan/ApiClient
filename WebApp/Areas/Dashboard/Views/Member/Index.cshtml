@@ -1,0 +1,13 @@
+﻿@model List<Member>
+<table>
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>@item.Username</td>
+            <td>@item.Email</td>
+            <td>@item.Role</td>
+            <td>@item.Longitude</td>
+            <td>@item.Latitude</td>            
+        </tr>
+    }
+</table>

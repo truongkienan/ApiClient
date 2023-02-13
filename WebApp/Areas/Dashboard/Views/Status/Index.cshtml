@@ -1,0 +1,25 @@
+﻿@model List<Status>
+<form action="/dashboard/status/create" method="post">
+    <div>
+        <label>Id</label>
+        <input type="number" name="id"/>
+    </div>
+        <div>
+        <label>Name</label>
+        <input type="text" name="name"/>
+    </div>
+    <div>
+        <button>Save Change</button>
+    </div>
+</form>
+<table class="table table-bordered">
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Name</td>
+            <td><a href="/dashboard/status/delete/@item.Id">Delete</a></td>
+            <td><a href="/dashboard/status/edit/@item.Id">Edit</a></td>
+        </tr>
+    }
+</table>

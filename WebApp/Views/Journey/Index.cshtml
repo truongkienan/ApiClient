@@ -1,0 +1,67 @@
+﻿@model List<Journey>
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Driver</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var item in Model)
+        {
+         <tr>
+            <td>@item.DriverName</td>
+            <td>@item.CustomerName</td>
+            <td>@item.StatusName</td>
+            <td><i v="@item.JourneyId" class="fa-solid fa-pen-to-square"></i></td>
+        </tr>
+        }
+
+    </tbody>
+</table>
+<div class="modal" tabindex="-1" id="edt">
+  <div class="modal-dialog">
+    <form action="/journey/edit" class="modal-content">
+        <input type="hidden" name="journeyId" />
+      <div class="modal-header">
+        <h5 class="modal-title">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <div>
+              <label>Driver</label>
+              <span id="dri"></span>
+          </div>
+        <div>
+              <label>Customer</label>
+              <span id="cus"></span>
+          </div>
+        <div>
+            <label>Status</label>
+            <select name="statusId" asp-items="@ViewBag.statuses"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+@section Scripts{
+    <script>
+        $('.fa-pen-to-square').click(function(){            
+            var id = $(this).attr('v');
+            $.post('/journey/detail', {id:id}, (o)=>{
+                $('input[name="journeyId"]').val(o['journeyId']);
+                $(dri).text(o['driverName']);
+                $(cus).text(o['customerName']);
+                $(edt).modal('show');
+                $('select[name="statusId"]').val(o['statusId']);
+            })
+        })
+</script>
+    
+}

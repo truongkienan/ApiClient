@@ -1,0 +1,22 @@
+﻿@model Info
+<form method="post" enctype="multipart/form-data">
+    <div>
+        <label>Image</label>
+        <input type="file" name="f" required/>
+    </div>
+    <div>
+        <label>Name</label>
+        <input type="text" asp-for="Name"/>
+        <span asp-validation-for="Name"></span>
+    </div>
+    <div>
+        <lable>Size</lable>
+        <input type="number" asp-for="Size" />
+        <span asp-validation-for="Size"></span>
+    </div>
+    <button>Upload</button>
+</form>
+@if(Model!=null)
+{
+    <img src="https://localhost:44396/images/@Model.FileName"  width="200" />
+}

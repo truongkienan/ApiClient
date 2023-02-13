@@ -1,0 +1,59 @@
+﻿@using System.Security.Claims
+@model Member
+<p>Welcome: @User.Identity.Name</p>
+<p>Your Email: @User.FindFirstValue(ClaimTypes.Email)</p>
+<p>Your Driver: @Model.Username</p>
+<div id="map" style="width:100%; height:500px"></div>
+@section Scripts{
+<script type="text/javascript">
+    mapboxgl.accessToken = 'pk.eyJ1IjoiMjA4ODAyNzgiLCJhIjoiY2w4bzBvZWQ1MGlpcDNvcGJwMWcya3RzdiJ9.3lsgrTQgHB13Jb-00-d5WQ';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',        
+        zoom: 15
+    });
+
+var markerCus = new mapboxgl.Marker();
+var markerDri = new mapboxgl.Marker({color:'#F00'}).setLngLat([@Model.Longitude, @Model.Latitude]).addTo(map);
+var center = null;
+     if (navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition((p)=>{
+        center=[p.coords.longitude, p.coords.latitude];        
+        map.setCenter(center);
+        markerCus.setLngLat(center).addTo(map);
+        $.post('/home/setlocation', {
+            memberId: '@User.FindFirstValue(ClaimTypes.NameIdentifier)',
+            longitude: center[0],
+            latitude: center[1]
+        });        
+    });
+  } else {
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+  //Get Location Driver Realtime
+   var memberId = '@User.FindFirstValue(ClaimTypes.NameIdentifier)';
+        var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        var wsUri = protocol + "//" + window.location.host;
+        var socket = new WebSocket(wsUri);
+        socket.onopen = e => {
+            console.log("socket opened", e);
+        };
+        socket.onclose = function (e) {
+            console.log("socket closed", e);
+        };
+        socket.onmessage = function (e) {
+            var o = JSON.parse(e.data);
+            if (o['r']=='dri') {
+                markerDri.setLngLat([o['long'], o['lat']]).addTo(map);
+            }            
+        };
+        socket.onerror = function (e) {
+            console.error(e.data);
+        };
+
+window.setInterval(function() {
+    center[1] += 0.001;
+    socket.send(JSON.stringify({ r: 'cus', mId: memberId, long: center[0], lat: center[1] }));
+}, 5000);
+</script>
+}
